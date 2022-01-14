@@ -1,5 +1,8 @@
 (ns scratch)
 
+;; TODO: add support for *
+;; TODO: support recursive patterns?
+;; TODO: support :limit opt?
 (defn pull-keys
   "Returns a map containing only those entries in map whose key is in pull-selector,
   recursively applying to nested maps.
@@ -48,31 +51,41 @@
             pull-selector)))
 
 (comment
+  ;; should nested vals require at least *?
   ;; xform to-datomic
   ;; xform from-datomic
   ;; generative tests
   ;; fn for schema -> selector w/ xforms
+
+  ;; use cases
+  ;;; apply pull selector to output from Entity API?
+  ;;; manipulate inbound/outbound wire data
+  ;;; ???
 
   (pull-keys {:test/level      0
               :test/other-next {:test/level 10
                                 :test/names ["name1" "name2"]}
               :test/_students  [{:teacher/id 2 :teacher/name "level 2"}]
               :some.other/foo  "bar"
+              :test/status     {:db/ident :status/normal}
               :test/next       {:test/level 1
                                 :test/name  "level 1"
                                 :test/next  {:test/level 2
                                              :test/next  {:test/level 3}}}}
 
              [:test/level
+              [:test/status :xform :db/ident]
               [:test/_students :as :test/teacher :xform first]
               [:some.other/foo :as :test/foo]
               {:test/other-next [[:test/names :xform #(map keyword %)]]
-               :test/next       [[:test/level :as "nested-level"]
-                                 [:test/include? :default false]]}]
-             #_[[:test/level :xform str :as "level"]
-                [:test/include? :default false]
-                {:test/other-next        [[:test/names :xform #(map clojure.string/upper-case %)]]
-                 [:test/next :as "next"] [:test/name
-                                          [:test/include? :default true]
-                                          {:test/next [{:test/next [:test/level]}]}]}])
+               :test/next       [:test/level
+                                 [:test/include? :default false]]}])
+  =>
+  {:test/level 0,
+   :test/status :status/normal,
+   :test/teacher {:teacher/id 2, :teacher/name "level 2"},
+   :test/foo "bar",
+   :test/other-next {:test/names (:name1 :name2)},
+   :test/next {:test/level 1, :test/include? false}}
+
   )
