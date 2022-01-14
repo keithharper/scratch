@@ -15,12 +15,12 @@
         k?        (some-fn (complement coll?)
                            opts?)]
     (reduce (fn [acc k-or-kopts]
-              (let [k-fn (fn [k-or-kopts*]
+              (let [kf (fn [k-or-kopts*]
                            (if (opts? k-or-kopts*)
                              (let [[k & {:keys [as]}] k-or-kopts*]
                                (or as k))
                              k-or-kopts*))
-                    v-fn (fn [m* k-or-kopts*]
+                    vf (fn [m* k-or-kopts*]
                            (if (opts? k-or-kopts*)
                              (let [[k & {:keys [xform default]}] k-or-kopts*]
                                (cond-> m*
@@ -32,14 +32,14 @@
                              (get m* k-or-kopts*)))]
                 (cond
                   (k? k-or-kopts)
-                  (if-some [v (v-fn m k-or-kopts)]
-                    (assoc acc (k-fn k-or-kopts) v)
+                  (if-some [v (vf m k-or-kopts)]
+                    (assoc acc (kf k-or-kopts) v)
                     acc)
 
                   (map? k-or-kopts)
                   (reduce-kv (fn [acc* k-or-kopts* selector]
-                               (let [k (k-fn k-or-kopts*)]
-                                 (if-some [v* (pull-keys (v-fn m k-or-kopts*) selector)]
+                               (let [k (kf k-or-kopts*)]
+                                 (if-some [v* (pull-keys (vf m k-or-kopts*) selector)]
                                    (assoc acc* k v*)
                                    acc*)))
                              acc
