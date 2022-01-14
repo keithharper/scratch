@@ -1,4 +1,4 @@
-(ns scratch)
+(ns data)
 
 ;; TODO: add support for *
 ;; TODO: support recursive patterns?
